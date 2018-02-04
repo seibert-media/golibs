@@ -9,7 +9,7 @@ The repository containing various shared libs for the entire playnet project.
 ## Libs
 
 ### Logging
-Our logging setup including go.uber.org/zap and golang/glog for logging.
+Our logging setup using go.uber.org/zap.
 Sentry and Jaeger are being added for production environments.
 
 ```go
