@@ -13,12 +13,12 @@ Our logging setup using go.uber.org/zap.
 Sentry and Jaeger are being added for production environments.
 
 ```go
-log := logging.New(
+l := log.New(
     "name",
     "sentryDSN",
     false,
 )
-defer log.Close()
+defer l.Close()
 ```
 
 Afterwards the logger can be used just like a default zap.Logger.
