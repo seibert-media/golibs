@@ -30,6 +30,12 @@ func (log *Logger) Close() {
 	log.closer.Close()
 }
 
+// WithFields wrapper around zap.With
+func (log *Logger) WithFields(fields ...zapcore.Field) *Logger {
+	log.Logger = log.Logger.With(fields...)
+	return log
+}
+
 // New Logger including sentry and jaeger
 func New(name, dsn string, dbg bool) *Logger {
 	highPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
@@ -81,6 +87,36 @@ func New(name, dsn string, dbg bool) *Logger {
 
 	tracer, closer, err := cfg.New(
 		name,
+		config.Logger(jaegerzap.NewLogger(logger)),
+		config.Metrics(jMetricsFactory),
+	)
+	if err != nil {
+		panic(fmt.Sprintf("cannot init jaeger: %v\n", err))
+	}
+	log := &Logger{
+		Logger: logger,
+		Sentry: sentry,
+		closer: closer,
+		Tracer: tracer,
+	}
+
+	return log
+}
+
+// NewNop returns Logger doing nothing
+func NewNop() *Logger {
+	sentry, err := raven.New("")
+	if err != nil {
+		panic(err)
+	}
+
+	logger := zap.NewNop()
+	cfg := config.Configuration{}
+
+	jMetricsFactory := metrics.NullFactory
+
+	tracer, closer, err := cfg.New(
+		"nop",
 		config.Logger(jaegerzap.NewLogger(logger)),
 		config.Metrics(jMetricsFactory),
 	)
