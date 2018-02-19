@@ -23,6 +23,10 @@ type Logger struct {
 	Sentry *raven.Client
 	closer io.Closer
 	Tracer opentracing.Tracer
+
+	// original data for copying
+	name, dsn string
+	dbg       bool
 }
 
 // Close the Tracer
@@ -32,8 +36,9 @@ func (log *Logger) Close() {
 
 // WithFields wrapper around zap.With
 func (log *Logger) WithFields(fields ...zapcore.Field) *Logger {
-	log.Logger = log.Logger.With(fields...)
-	return log
+	l := New(log.name, log.dsn, log.dbg)
+	l.Logger = l.Logger.With(fields...)
+	return l
 }
 
 // New Logger including sentry and jaeger
@@ -98,6 +103,10 @@ func New(name, dsn string, dbg bool) *Logger {
 		Sentry: sentry,
 		closer: closer,
 		Tracer: tracer,
+
+		name: name,
+		dsn:  dsn,
+		dbg:  dbg,
 	}
 
 	return log
