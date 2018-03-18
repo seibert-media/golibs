@@ -27,6 +27,7 @@ type Logger struct {
 	// original data for copying
 	name, dsn string
 	dbg       bool
+	nop       bool
 }
 
 // Close the Tracer
@@ -36,6 +37,9 @@ func (log *Logger) Close() {
 
 // WithFields wrapper around zap.With
 func (log *Logger) WithFields(fields ...zapcore.Field) *Logger {
+	if log.nop {
+		return log
+	}
 	l := New(log.name, log.dsn, log.dbg)
 	l.Logger = l.Logger.With(fields...)
 	return l
@@ -136,6 +140,7 @@ func NewNop() *Logger {
 		Sentry: sentry,
 		closer: closer,
 		Tracer: tracer,
+		nop:    true,
 	}
 
 	return log
