@@ -47,7 +47,7 @@ func New(name, dsn string, dbg bool) *Logger {
 		return lvl >= zapcore.ErrorLevel
 	})
 	lowPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl < zapcore.WarnLevel
+		return lvl < zapcore.ErrorLevel
 	})
 
 	sentry, err := raven.New(dsn)
