@@ -47,7 +47,7 @@ func New(name, dsn string, dbg bool) *Logger {
 		return lvl >= zapcore.ErrorLevel
 	})
 	lowPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl < zapcore.ErrorLevel
+		return lvl < zapcore.WarnLevel
 	})
 
 	sentry, err := raven.New(dsn)
@@ -69,7 +69,6 @@ func New(name, dsn string, dbg bool) *Logger {
 	} else {
 		core = zapcore.NewTee(
 			zapcore.NewCore(consoleEncoder, consoleErrors, highPriority),
-			zapcore.NewCore(consoleEncoder, consoleDebugging, lowPriority),
 			zapcore.NewCore(sentryEncoder, consoleErrors, highPriority),
 		)
 	}
