@@ -5,13 +5,13 @@
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/f61779459d564fb59fc1013d27b36b1f)](https://www.codacy.com/app/seibert-media/golibs?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=seibert-media/golibs&amp;utm_campaign=Badge_Grade)
 [![Codacy Badge](https://api.codacy.com/project/badge/Coverage/f61779459d564fb59fc1013d27b36b1f)](https://www.codacy.com/app/seibert-media/golibs?utm_source=github.com&utm_medium=referral&utm_content=seibert-media/golibs&utm_campaign=Badge_Coverage)
 
-The repository containing various shared libs for //SEIBERT/MEDIA projects.
+The repository contains various shared libs for use //SEIBERT/MEDIA Golang projects.
 
 ## Libs
 
 ### Logging
-Our logging setup using go.uber.org/zap.
-Sentry and Jaeger are being added for production environments.
+This logging setup is using go.uber.org/zap.
+Sentry is being added for production environments.
 
 ```go
 l := log.New(
@@ -39,7 +39,7 @@ Namely:
 - `(c *Context) WithTimeout(d time.Duration) (*Context, context.CancelFunc)`
 all of this can be accessed directly through the object to be modified.
 
-Aside from that, the original implementation has been migrated into this package to allow repacing
+Aside from that, the original implementation has been migrated into this package to allow replacing
 the original context import with this package and provide still working code.
 Namely:
 - `WithValue(c *Context, key, val interface{}) *Context`
