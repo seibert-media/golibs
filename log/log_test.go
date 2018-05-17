@@ -81,6 +81,14 @@ func Test_NewInvalidSentryURL(t *testing.T) {
 		}()
 		log.New("^", true)
 	}()
+	func() {
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("New() should have panicked")
+			}
+		}()
+		log.NewWithCustom(context.Background(), "^", true)
+	}()
 }
 
 func Test_NewNop(t *testing.T) {
@@ -130,7 +138,7 @@ func Test_ContextWorks(t *testing.T) {
 	ctx = log.New("", true)
 	ctx.WithDeadline(time.Now().Add(1 * time.Millisecond))
 	select {
-	case <-time.After(2 * time.Millisecond):
+	case <-time.After(10 * time.Millisecond):
 		t.Fatal("context should be closed after deadline")
 	case <-ctx.Done():
 		break
@@ -138,7 +146,7 @@ func Test_ContextWorks(t *testing.T) {
 	ctx = log.New("", true)
 	ctx.WithTimeout(1 * time.Millisecond)
 	select {
-	case <-time.After(2 * time.Millisecond):
+	case <-time.After(10 * time.Millisecond):
 		t.Fatal("context should be closed after deadline")
 	case <-ctx.Done():
 		break
@@ -163,7 +171,7 @@ func Test_ContextReplacementWorks(t *testing.T) {
 	ctx = log.New("", true)
 	ctx, _ = log.WithDeadline(ctx, time.Now().Add(1*time.Millisecond))
 	select {
-	case <-time.After(2 * time.Millisecond):
+	case <-time.After(10 * time.Millisecond):
 		t.Fatal("context should be closed after deadline")
 	case <-ctx.Done():
 		break
@@ -171,7 +179,7 @@ func Test_ContextReplacementWorks(t *testing.T) {
 	ctx = log.New("", true)
 	ctx, _ = log.WithTimeout(ctx, 1*time.Millisecond)
 	select {
-	case <-time.After(2 * time.Millisecond):
+	case <-time.After(10 * time.Millisecond):
 		t.Fatal("context should be closed after deadline")
 	case <-ctx.Done():
 		break
