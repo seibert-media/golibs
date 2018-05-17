@@ -1,154 +1,65 @@
 package log
 
 import (
+	"context"
 	"fmt"
-	"io"
 	"os"
-
-	opentracing "github.com/opentracing/opentracing-go"
 
 	"github.com/getsentry/raven-go"
 	"github.com/pkg/errors"
-	"github.com/uber/jaeger-client-go/config"
-	jaegerzap "github.com/uber/jaeger-client-go/log/zap"
-	"github.com/uber/jaeger-lib/metrics"
 	"go.uber.org/zap"
 	"go.uber.org/zap/buffer"
 	"go.uber.org/zap/zapcore"
 )
 
-// Logger including sentry
-type Logger struct {
+// Context implements context.Context while adding our own logging and tracing functionality
+type Context struct {
+	context.Context
 	*zap.Logger
 	Sentry *raven.Client
-	closer io.Closer
-	Tracer opentracing.Tracer
 
-	// original data for copying
-	name, dsn string
-	dbg       bool
-	nop       bool
+	dsn   string
+	debug bool
 }
 
-// Close the Tracer
-func (log *Logger) Close() {
-	log.closer.Close()
-}
-
-// WithFields wrapper around zap.With
-func (log *Logger) WithFields(fields ...zapcore.Field) *Logger {
-	if log.nop {
-		return log
-	}
-	l := New(log.name, log.dsn, log.dbg)
-	l.Logger = l.Logger.With(fields...)
-	return l
-}
-
-// New Logger including sentry and jaeger
-func New(name, dsn string, dbg bool) *Logger {
-	highPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl >= zapcore.ErrorLevel
-	})
-	lowPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl >= zapcore.InfoLevel && lvl < zapcore.ErrorLevel
-	})
-	debugPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-		return lvl >= zapcore.DebugLevel && lvl < zapcore.InfoLevel
-	})
-
+// New Context with included logger and sentry instances
+func New(ctx context.Context, dsn string, debug bool) *Context {
 	sentry, err := raven.New(dsn)
 	if err != nil {
 		panic(err)
 	}
 
-	consoleDebugging := zapcore.Lock(os.Stdout)
-	consoleErrors := zapcore.Lock(os.Stderr)
-	consoleConfig := zap.NewDevelopmentEncoderConfig()
-	consoleEncoder := zapcore.NewConsoleEncoder(consoleConfig)
-	sentryEncoder := NewSentryEncoder(sentry)
-	var core zapcore.Core
-	if dbg {
-		core = zapcore.NewTee(
-			zapcore.NewCore(consoleEncoder, consoleErrors, highPriority),
-			zapcore.NewCore(consoleEncoder, consoleDebugging, lowPriority),
-			zapcore.NewCore(consoleEncoder, consoleDebugging, debugPriority),
-		)
-	} else {
-		core = zapcore.NewTee(
-			zapcore.NewCore(consoleEncoder, consoleErrors, highPriority),
-			zapcore.NewCore(consoleEncoder, consoleDebugging, lowPriority),
-			zapcore.NewCore(sentryEncoder, consoleErrors, highPriority),
-		)
+	logger := buildLogger(sentry, debug)
+
+	return &Context{
+		Context: ctx,
+		Logger:  logger,
+		Sentry:  sentry,
+
+		dsn:   dsn,
+		debug: debug,
 	}
+}
 
-	logger := zap.New(core)
-	if dbg {
-		logger = logger.WithOptions(
-			zap.AddCaller(),
-			zap.AddStacktrace(zap.ErrorLevel),
-		)
-	} else {
-		logger = logger.WithOptions(
-			zap.AddStacktrace(zap.FatalLevel),
-		)
-	}
+// NewNop returns Context with empty logging and tracing
+func NewNop(ctx context.Context) *Context {
+	sentry, _ := raven.New("")
+	logger := zap.NewNop()
 
-	cfg := config.Configuration{}
-
-	jMetricsFactory := metrics.NullFactory
-
-	tracer, closer, err := cfg.New(
-		name,
-		config.Logger(jaegerzap.NewLogger(logger)),
-		config.Metrics(jMetricsFactory),
-	)
-	if err != nil {
-		panic(fmt.Sprintf("cannot init jaeger: %v\n", err))
-	}
-	log := &Logger{
-		Logger: logger,
-		Sentry: sentry,
-		closer: closer,
-		Tracer: tracer,
-
-		name: name,
-		dsn:  dsn,
-		dbg:  dbg,
+	log := &Context{
+		Context: ctx,
+		Logger:  logger,
+		Sentry:  sentry,
 	}
 
 	return log
 }
 
-// NewNop returns Logger doing nothing
-func NewNop() *Logger {
-	sentry, err := raven.New("")
-	if err != nil {
-		panic(err)
-	}
-
-	logger := zap.NewNop()
-	cfg := config.Configuration{}
-
-	jMetricsFactory := metrics.NullFactory
-
-	tracer, closer, err := cfg.New(
-		"nop",
-		config.Logger(jaegerzap.NewLogger(logger)),
-		config.Metrics(jMetricsFactory),
-	)
-	if err != nil {
-		panic(fmt.Sprintf("cannot init jaeger: %v\n", err))
-	}
-	log := &Logger{
-		Logger: logger,
-		Sentry: sentry,
-		closer: closer,
-		Tracer: tracer,
-		nop:    true,
-	}
-
-	return log
+// WithFields wrapper around zap.With
+func (c *Context) WithFields(fields ...zapcore.Field) *Context {
+	l := New(c.Context, c.dsn, c.debug)
+	l.Logger = l.Logger.With(fields...)
+	return l
 }
 
 // NewSentryEncoder with dsn
@@ -208,4 +119,59 @@ func (s *sentryEncoder) AddString(key, val string) {
 	}
 	tags[key] = val
 	s.Sentry.SetTagsContext(tags)
+}
+
+func (s *sentryEncoder) AddInt64(key string, val int64) {
+	tags := s.Sentry.Tags
+	if tags == nil {
+		tags = make(map[string]string)
+	}
+	tags[key] = fmt.Sprint(val)
+	s.Sentry.SetTagsContext(tags)
+}
+
+// buildLogger
+func buildLogger(sentry *raven.Client, debug bool) *zap.Logger {
+	highPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+		return lvl >= zapcore.ErrorLevel
+	})
+	lowPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+		return lvl >= zapcore.InfoLevel && lvl < zapcore.ErrorLevel
+	})
+	debugPriority := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+		return lvl >= zapcore.DebugLevel && lvl < zapcore.InfoLevel
+	})
+
+	consoleDebugging := zapcore.Lock(os.Stdout)
+	consoleErrors := zapcore.Lock(os.Stderr)
+	consoleConfig := zap.NewDevelopmentEncoderConfig()
+	consoleEncoder := zapcore.NewConsoleEncoder(consoleConfig)
+	sentryEncoder := NewSentryEncoder(sentry)
+	var core zapcore.Core
+	if debug {
+		core = zapcore.NewTee(
+			zapcore.NewCore(consoleEncoder, consoleErrors, highPriority),
+			zapcore.NewCore(consoleEncoder, consoleDebugging, lowPriority),
+			zapcore.NewCore(consoleEncoder, consoleDebugging, debugPriority),
+		)
+	} else {
+		core = zapcore.NewTee(
+			zapcore.NewCore(consoleEncoder, consoleErrors, highPriority),
+			zapcore.NewCore(consoleEncoder, consoleDebugging, lowPriority),
+			zapcore.NewCore(sentryEncoder, consoleErrors, highPriority),
+		)
+	}
+
+	logger := zap.New(core)
+	if debug {
+		logger = logger.WithOptions(
+			zap.AddCaller(),
+			zap.AddStacktrace(zap.ErrorLevel),
+		)
+	} else {
+		logger = logger.WithOptions(
+			zap.AddStacktrace(zap.FatalLevel),
+		)
+	}
+	return logger
 }
