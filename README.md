@@ -49,6 +49,11 @@ Namely:
 
 There might still be incompatibility issues if dependencies do internal context modification and do not use this import.
 
+## Compatibility
+
+This library requires Go 1.9+ and is currently tested against Go 1.9.x and 1.10.x
+For an up-to-date status on this check [.travis.yml](.travis.yml).
+
 ## Contributions
 
 Pull Requests and Issue Reports are welcome.
