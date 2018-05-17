@@ -14,5 +14,10 @@ env:
 before_install:
   - make deps
 
+before_script:
+  - make test
+  - make cover
+  - godacov -t $CODACY_TOKEN -r ./coverage.out -c $TRAVIS_COMMIT
+
 script:
 - make test

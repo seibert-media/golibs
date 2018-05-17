@@ -11,7 +11,7 @@ import (
 )
 
 func Test_NewDebug(t *testing.T) {
-	ctx := log.New(context.Background(), "", true)
+	ctx := log.New("", true)
 	if ctx == nil {
 		t.Fatal("ctx is nil")
 	}
@@ -42,7 +42,7 @@ func Test_NewDebug(t *testing.T) {
 }
 
 func Test_NewNoDebug(t *testing.T) {
-	ctx := log.New(context.Background(), "", false)
+	ctx := log.New("", false)
 	if ctx == nil {
 		t.Fatal("ctx is nil")
 	}
@@ -79,7 +79,7 @@ func Test_NewInvalidSentryURL(t *testing.T) {
 				t.Errorf("New() should have panicked")
 			}
 		}()
-		log.New(context.Background(), "^", true)
+		log.New("^", true)
 	}()
 }
 
@@ -113,7 +113,7 @@ func Test_NewNop(t *testing.T) {
 type TestCtxKey string
 
 func Test_ContextWorks(t *testing.T) {
-	ctx := log.New(context.Background(), "", true)
+	ctx := log.New("", true)
 	ctx.WithValue(TestCtxKey("test"), "test")
 	ctx.Info("test", zap.String("test", "test"), zap.Int("num", 1))
 	if ctx.Value(TestCtxKey("test")) != "test" {
@@ -127,7 +127,7 @@ func Test_ContextWorks(t *testing.T) {
 	if ctx.Err() != context.Canceled {
 		t.Fatal("context should be closed")
 	}
-	ctx = log.New(context.Background(), "", true)
+	ctx = log.New("", true)
 	ctx.WithDeadline(time.Now().Add(1 * time.Millisecond))
 	select {
 	case <-time.After(2 * time.Millisecond):
@@ -135,12 +135,66 @@ func Test_ContextWorks(t *testing.T) {
 	case <-ctx.Done():
 		break
 	}
-	ctx = log.New(context.Background(), "", true)
+	ctx = log.New("", true)
 	ctx.WithTimeout(1 * time.Millisecond)
 	select {
 	case <-time.After(2 * time.Millisecond):
 		t.Fatal("context should be closed after deadline")
 	case <-ctx.Done():
 		break
+	}
+}
+
+func Test_ContextReplacementWorks(t *testing.T) {
+	ctx := log.New("", true)
+	ctx = log.WithValue(ctx, TestCtxKey("test"), "test")
+	ctx.Info("test", zap.String("test", "test"), zap.Int("num", 1))
+	if ctx.Value(TestCtxKey("test")) != "test" {
+		t.Fatal("ctx should contain text")
+	}
+	ctx, cancel := log.WithCancel(ctx)
+	if ctx.Err() != nil {
+		t.Fatal("context should not have error")
+	}
+	cancel()
+	if ctx.Err() != context.Canceled {
+		t.Fatal("context should be closed")
+	}
+	ctx = log.New("", true)
+	ctx, _ = log.WithDeadline(ctx, time.Now().Add(1*time.Millisecond))
+	select {
+	case <-time.After(2 * time.Millisecond):
+		t.Fatal("context should be closed after deadline")
+	case <-ctx.Done():
+		break
+	}
+	ctx = log.New("", true)
+	ctx, _ = log.WithTimeout(ctx, 1*time.Millisecond)
+	select {
+	case <-time.After(2 * time.Millisecond):
+		t.Fatal("context should be closed after deadline")
+	case <-ctx.Done():
+		break
+	}
+
+	nativeCtx := context.Background()
+	newCtx := log.Background()
+
+	nativeCtx = context.WithValue(nativeCtx, TestCtxKey("test"), "test")
+	newCtx = log.WithValue(newCtx, TestCtxKey("test"), "test")
+
+	if nativeCtx.Value(TestCtxKey("test")) != newCtx.Value(TestCtxKey("test")) {
+		t.Fatal("native and new context mismatch")
+	}
+
+	nativeCtx, nativeCancel := context.WithCancel(nativeCtx)
+	nativeCancel()
+	if nativeCtx.Err() != context.Canceled {
+		t.Fatal("context should be closed")
+	}
+	newCtx, newCancel := log.WithCancel(newCtx)
+	newCancel()
+	if newCtx.Err() != context.Canceled {
+		t.Fatal("context should be closed")
 	}
 }

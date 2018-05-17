@@ -24,7 +24,29 @@ type Context struct {
 }
 
 // New Context with included logger and sentry instances
-func New(ctx context.Context, dsn string, debug bool) *Context {
+// This initializes a new empty context using context.Background()
+// To use a custom context call NewWithCustom(...)
+func New(dsn string, debug bool) *Context {
+	sentry, err := raven.New(dsn)
+	if err != nil {
+		panic(err)
+	}
+
+	logger := buildLogger(sentry, debug)
+
+	return &Context{
+		Context: context.Background(),
+		Logger:  logger,
+		Sentry:  sentry,
+
+		dsn:   dsn,
+		debug: debug,
+	}
+}
+
+// NewWithCustom Context does what New(...) does but uses the provided context
+// instead of initializing a new one
+func NewWithCustom(ctx context.Context, dsn string, debug bool) *Context {
 	sentry, err := raven.New(dsn)
 	if err != nil {
 		panic(err)
@@ -40,6 +62,21 @@ func New(ctx context.Context, dsn string, debug bool) *Context {
 		dsn:   dsn,
 		debug: debug,
 	}
+}
+
+// Background does what context.Background would do
+// but initializes empty logger and sentry clients
+func Background() *Context {
+	sentry, _ := raven.New("")
+	logger := zap.NewNop()
+
+	log := &Context{
+		Context: context.Background(),
+		Logger:  logger,
+		Sentry:  sentry,
+	}
+
+	return log
 }
 
 // NewNop returns Context with empty logging and tracing
@@ -58,7 +95,7 @@ func NewNop(ctx context.Context) *Context {
 
 // WithFields wrapper around zap.With
 func (c *Context) WithFields(fields ...zapcore.Field) *Context {
-	l := New(c.Context, c.dsn, c.debug)
+	l := NewWithCustom(c.Context, c.dsn, c.debug)
 	l.Logger = l.Logger.With(fields...)
 	return l
 }
@@ -85,6 +122,33 @@ func (c *Context) WithDeadline(d time.Time) (*Context, context.CancelFunc) {
 
 // WithTimeout is meant to replace context.WithTimeout as we can not provide compatibility with it
 func (c *Context) WithTimeout(d time.Duration) (*Context, context.CancelFunc) {
+	ctx, cancel := context.WithTimeout(c.Context, d)
+	c.Context = ctx
+	return c, cancel
+}
+
+// WithValue is meant to replace context.WithValue
+func WithValue(c *Context, key, val interface{}) *Context {
+	c.Context = context.WithValue(c.Context, key, val)
+	return c
+}
+
+// WithCancel is meant to replace context.WithCancel
+func WithCancel(c *Context) (*Context, context.CancelFunc) {
+	ctx, cancel := context.WithCancel(c.Context)
+	c.Context = ctx
+	return c, cancel
+}
+
+// WithDeadline is meant to replace context.WithDeadline
+func WithDeadline(c *Context, d time.Time) (*Context, context.CancelFunc) {
+	ctx, cancel := context.WithDeadline(c.Context, d)
+	c.Context = ctx
+	return c, cancel
+}
+
+// WithTimeout is meant to replace context.WithTimeout
+func WithTimeout(c *Context, d time.Duration) (*Context, context.CancelFunc) {
 	ctx, cancel := context.WithTimeout(c.Context, d)
 	c.Context = ctx
 	return c, cancel

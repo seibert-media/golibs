@@ -39,3 +39,8 @@ deps:
 # test entire repo
 test:
 	@go test -cover -race $(shell go list ./... | grep -v /vendor/)
+
+cover:
+	go get github.com/haya14busa/goverage
+	go get github.com/schrej/godacov
+	goverage -v -coverprofile=coverage.out $(shell go list ./... | grep -v /vendor/)
