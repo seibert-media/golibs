@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/getsentry/raven-go"
 	"github.com/pkg/errors"
@@ -60,6 +61,33 @@ func (c *Context) WithFields(fields ...zapcore.Field) *Context {
 	l := New(c.Context, c.dsn, c.debug)
 	l.Logger = l.Logger.With(fields...)
 	return l
+}
+
+// WithValue is meant to replace context.WithValue as we can not provide compatibility with it
+func (c *Context) WithValue(key, val interface{}) *Context {
+	c.Context = context.WithValue(c.Context, key, val)
+	return c
+}
+
+// WithCancel is meant to replace context.WithCancel as we can not provide compatibility with it
+func (c *Context) WithCancel() (*Context, context.CancelFunc) {
+	ctx, cancel := context.WithCancel(c.Context)
+	c.Context = ctx
+	return c, cancel
+}
+
+// WithDeadline is meant to replace context.WithDeadline as we can not provide compatibility with it
+func (c *Context) WithDeadline(d time.Time) (*Context, context.CancelFunc) {
+	ctx, cancel := context.WithDeadline(c.Context, d)
+	c.Context = ctx
+	return c, cancel
+}
+
+// WithTimeout is meant to replace context.WithTimeout as we can not provide compatibility with it
+func (c *Context) WithTimeout(d time.Duration) (*Context, context.CancelFunc) {
+	ctx, cancel := context.WithTimeout(c.Context, d)
+	c.Context = ctx
+	return c, cancel
 }
 
 // NewSentryEncoder with dsn

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/seibert-media/golibs/log"
 	"go.uber.org/zap"
@@ -107,4 +108,39 @@ func Test_NewNop(t *testing.T) {
 	ctx.Info("test", zap.String("test", "test"), zap.Int("num", 1))
 	ctx.Error("test", zap.String("test", "test"), zap.Int("num", 1))
 	ctx.Error("test", zap.String("test", "test"), zap.Int("num", 1), zap.Error(errors.New("test")))
+}
+
+type TestCtxKey string
+
+func Test_ContextWorks(t *testing.T) {
+	ctx := log.New(context.Background(), "", true)
+	ctx.WithValue(TestCtxKey("test"), "test")
+	ctx.Info("test", zap.String("test", "test"), zap.Int("num", 1))
+	if ctx.Value(TestCtxKey("test")) != "test" {
+		t.Fatal("ctx should contain text")
+	}
+	ctx, cancel := ctx.WithCancel()
+	if ctx.Err() != nil {
+		t.Fatal("context should not have error")
+	}
+	cancel()
+	if ctx.Err() != context.Canceled {
+		t.Fatal("context should be closed")
+	}
+	ctx = log.New(context.Background(), "", true)
+	ctx.WithDeadline(time.Now().Add(1 * time.Millisecond))
+	select {
+	case <-time.After(2 * time.Millisecond):
+		t.Fatal("context should be closed after deadline")
+	case <-ctx.Done():
+		break
+	}
+	ctx = log.New(context.Background(), "", true)
+	ctx.WithTimeout(1 * time.Millisecond)
+	select {
+	case <-time.After(2 * time.Millisecond):
+		t.Fatal("context should be closed after deadline")
+	case <-ctx.Done():
+		break
+	}
 }
