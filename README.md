@@ -3,6 +3,7 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Build Status](https://travis-ci.org/seibert-media/golibs.svg?branch=master)](https://travis-ci.org/seibert-media/golibs)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/f61779459d564fb59fc1013d27b36b1f)](https://www.codacy.com/app/seibert-media/golibs?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=seibert-media/golibs&amp;utm_campaign=Badge_Grade)
+[![Codacy Badge](https://api.codacy.com/project/badge/Coverage/f61779459d564fb59fc1013d27b36b1f)](https://www.codacy.com/app/seibert-media/golibs?utm_source=github.com&utm_medium=referral&utm_content=seibert-media/golibs&utm_campaign=Badge_Coverage)
 
 The repository containing various shared libs for //SEIBERT/MEDIA projects.
 
