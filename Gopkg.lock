@@ -2,12 +2,6 @@
 
 
 [[projects]]
-  name = "github.com/apache/thrift"
-  packages = ["lib/go/thrift"]
-  revision = "b2a4d4ae21c789b689dd162deb819665567f481c"
-  version = "0.10.0"
-
-[[projects]]
   name = "github.com/certifi/gocertifi"
   packages = ["."]
   revision = "deb3ae2ef2610fde3330947281941c562861188b"
@@ -23,7 +17,7 @@
   branch = "master"
   name = "github.com/getsentry/raven-go"
   packages = ["."]
-  revision = "563b81fc02b75d664e54da31f787c2cc2186780b"
+  revision = "7452746037452673b6ba6ceb6c8aa4cbf4634f9e"
 
 [[projects]]
   name = "github.com/opentracing/opentracing-go"
@@ -49,9 +43,12 @@
     "internal/baggage",
     "internal/baggage/remote",
     "internal/spanlog",
+    "internal/throttler",
+    "internal/throttler/remote",
     "log",
     "log/zap",
     "rpcmetrics",
+    "thrift",
     "thrift-gen/agent",
     "thrift-gen/baggage",
     "thrift-gen/jaeger",
@@ -59,20 +56,20 @@
     "thrift-gen/zipkincore",
     "utils"
   ]
-  revision = "3ac96c6e679cb60a74589b0d0aa7c70a906183f7"
-  version = "v2.11.2"
+  revision = "b043381d944715b469fd6b37addfd30145ca1758"
+  version = "v2.14.0"
 
 [[projects]]
   name = "github.com/uber/jaeger-lib"
   packages = ["metrics"]
-  revision = "7f95f4f7e80028096410abddaae2556e4c61b59f"
-  version = "v1.3.1"
+  revision = "ed3a127ec5fef7ae9ea95b01b542c47fbd999ce5"
+  version = "v1.5.0"
 
 [[projects]]
   name = "go.uber.org/atomic"
   packages = ["."]
-  revision = "8474b86a5a6f79c443ce4b2992817ff32cf208b8"
-  version = "v1.3.1"
+  revision = "4e336646b2ef9fc6e47be8e21594178f98e5ebcf"
+  version = "v1.2.0"
 
 [[projects]]
   name = "go.uber.org/multierr"
@@ -90,18 +87,18 @@
     "internal/exit",
     "zapcore"
   ]
-  revision = "35aad584952c3e7020db7b839f6b102de6271f89"
-  version = "v1.7.1"
+  revision = "eeedf312bc6c57391d84767a4cd413f02a917974"
+  version = "v1.8.0"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/net"
   packages = ["context"]
-  revision = "f5dfe339be1d06f81b22525fe34671ee7d2c8904"
+  revision = "2491c5de3490fced2f6cff376127c667efeed857"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "b8b13ef9128827ec64d1a0bdcaa7556618e7a28c72249829147ba12d71813e6e"
+  inputs-digest = "fef6c8b81165a79fe5a43e3b49695b7a696755004cb9d8ed39f095e12e3f74b2"
   solver-name = "gps-cdcl"
   solver-version = 1
