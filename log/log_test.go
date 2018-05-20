@@ -92,7 +92,7 @@ func Test_NewInvalidSentryURL(t *testing.T) {
 }
 
 func Test_NewNop(t *testing.T) {
-	ctx := log.NewNop(context.Background())
+	ctx := log.NewNop()
 	if ctx == nil {
 		t.Fatal("ctx is nil")
 	}

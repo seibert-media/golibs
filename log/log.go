@@ -80,12 +80,12 @@ func Background() *Context {
 }
 
 // NewNop returns Context with empty logging and tracing
-func NewNop(ctx context.Context) *Context {
+func NewNop() *Context {
 	sentry, _ := raven.New("")
 	logger := zap.NewNop()
 
 	log := &Context{
-		Context: ctx,
+		Context: context.Background(),
 		Logger:  logger,
 		Sentry:  sentry,
 	}
