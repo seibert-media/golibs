@@ -42,6 +42,21 @@ func From(ctx context.Context) *Logger {
 	return l
 }
 
+// WithFields adds all passed in zap fields to the Logger stored in ctx and overwrites it for further use
+func WithFields(ctx context.Context, fields ...zapcore.Field) context.Context {
+	l := From(ctx).WithFields(fields...)
+	return WithLogger(ctx, l)
+}
+
+// WithFieldsOverwrite adds all passed in zap fields to the Logger stored in ctx and overwrites it for further use
+// WARNING: This might kill thread safety - Experimental and bad practice - DO NOT USE!
+func WithFieldsOverwrite(ctx context.Context, fields ...zapcore.Field) *Logger {
+	l := From(ctx)
+	n := l.WithFields(fields...)
+	*l = *n
+	return l
+}
+
 // New Logger sentry instance
 func New(dsn string, debug bool) *Logger {
 	sentry, err := raven.New(dsn)
@@ -88,6 +103,11 @@ func (l *Logger) WithFields(fields ...zapcore.Field) *Logger {
 // IsNop returns the nop status of Logger (mainly for testing)
 func (l *Logger) IsNop() bool {
 	return l.nop
+}
+
+// To stores the current logger in the passed in context
+func (l *Logger) To(ctx context.Context) context.Context {
+	return WithLogger(ctx, l)
 }
 
 // NewSentryEncoder with dsn

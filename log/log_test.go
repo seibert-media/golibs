@@ -10,34 +10,34 @@ import (
 )
 
 func Test_NewDebug(t *testing.T) {
-	ctx := log.New("", true)
-	if ctx == nil {
+	logger := log.New("", true)
+	if logger == nil {
 		t.Fatal("ctx is nil")
 	}
-	if ctx.Logger == nil {
+	if logger.Logger == nil {
 		t.Fatal("logger is nil")
 	}
-	if ctx.Sentry == nil {
+	if logger.Sentry == nil {
 		t.Fatal("sentry is nil")
 	}
-	ctx.Debug("test", zap.String("test", "test"), zap.Int("num", 1))
-	ctx.Info("test", zap.String("test", "test"), zap.Int("num", 1))
-	ctx.Error("test", zap.String("test", "test"), zap.Int("num", 1))
-	ctx.Error("test", zap.String("test", "test"), zap.Int("num", 1), zap.Error(errors.New("test")))
-	ctx = ctx.WithFields(zap.String("test", "test"), zap.Int("num", 0))
-	if ctx == nil {
+	logger.Debug("test", zap.String("test", "test"), zap.Int("num", 1))
+	logger.Info("test", zap.String("test", "test"), zap.Int("num", 1))
+	logger.Error("test", zap.String("test", "test"), zap.Int("num", 1))
+	logger.Error("test", zap.String("test", "test"), zap.Int("num", 1), zap.Error(errors.New("test")))
+	logger = logger.WithFields(zap.String("test", "test"), zap.Int("num", 0))
+	if logger == nil {
 		t.Fatal("ctx is nil")
 	}
-	if ctx.Logger == nil {
+	if logger.Logger == nil {
 		t.Fatal("logger is nil")
 	}
-	if ctx.Sentry == nil {
+	if logger.Sentry == nil {
 		t.Fatal("sentry is nil")
 	}
-	ctx.Debug("test", zap.String("test", "test"), zap.Int("num", 1))
-	ctx.Info("test", zap.String("test", "test"), zap.Int("num", 1))
-	ctx.Error("test", zap.String("test", "test"), zap.Int("num", 1))
-	ctx.Error("test", zap.String("test", "test"), zap.Int("num", 1), zap.Error(errors.New("test")))
+	logger.Debug("test", zap.String("test", "test"), zap.Int("num", 1))
+	logger.Info("test", zap.String("test", "test"), zap.Int("num", 1))
+	logger.Error("test", zap.String("test", "test"), zap.Int("num", 1))
+	logger.Error("test", zap.String("test", "test"), zap.Int("num", 1), zap.Error(errors.New("test")))
 }
 
 func Test_From(t *testing.T) {
@@ -56,35 +56,81 @@ func Test_From(t *testing.T) {
 	}
 }
 
+func Test_WithFields(t *testing.T) {
+	l := log.New("", true)
+	ctx := context.Background()
+
+	ctx = log.WithLogger(ctx, l)
+	if log.From(ctx).IsNop() {
+		t.Fatal("logger should not be nop")
+	}
+	log.From(ctx).Debug("test", zap.String("test", "test"))
+
+	ctx = log.WithFields(ctx, zap.String("test-new-field", "test"))
+
+	log.From(ctx).Debug("test", zap.String("test", "test"))
+}
+
+func Test_WithFieldsOverwrite(t *testing.T) {
+	l := log.New("", true)
+	ctx := context.Background()
+
+	ctx = log.WithLogger(ctx, l)
+	if log.From(ctx).IsNop() {
+		t.Fatal("logger should not be nop")
+	}
+	log.From(ctx).Debug("test", zap.String("test", "test"))
+
+	log.WithFieldsOverwrite(ctx, zap.String("test-new-field", "test"))
+
+	log.From(ctx).Debug("test", zap.String("test", "test"))
+}
+
+func Test_To(t *testing.T) {
+	l := log.New("", true)
+	ctx := context.Background()
+
+	ctx = l.To(ctx)
+	if log.From(ctx).IsNop() {
+		t.Fatal("logger should not be nop")
+	}
+	log.From(ctx).Debug("test", zap.String("test", "test"))
+
+	ctx = context.Background()
+	if !log.From(ctx).IsNop() {
+		t.Fatal("logger should be nop")
+	}
+}
+
 func Test_NewNoDebug(t *testing.T) {
-	ctx := log.New("", false)
-	if ctx == nil {
+	logger := log.New("", false)
+	if logger == nil {
 		t.Fatal("ctx is nil")
 	}
-	if ctx.Logger == nil {
+	if logger.Logger == nil {
 		t.Fatal("logger is nil")
 	}
-	if ctx.Sentry == nil {
+	if logger.Sentry == nil {
 		t.Fatal("sentry is nil")
 	}
-	ctx.Debug("test", zap.String("test", "test"), zap.Int("num", 1))
-	ctx.Info("test", zap.String("test", "test"), zap.Int("num", 1))
-	ctx.Error("test", zap.String("test", "test"), zap.Int("num", 1))
-	ctx.Error("test", zap.String("test", "test"), zap.Int("num", 1), zap.Error(errors.New("test")))
-	ctx = ctx.WithFields(zap.String("test", "test"), zap.Int("num", 0))
-	if ctx == nil {
+	logger.Debug("test", zap.String("test", "test"), zap.Int("num", 1))
+	logger.Info("test", zap.String("test", "test"), zap.Int("num", 1))
+	logger.Error("test", zap.String("test", "test"), zap.Int("num", 1))
+	logger.Error("test", zap.String("test", "test"), zap.Int("num", 1), zap.Error(errors.New("test")))
+	logger = logger.WithFields(zap.String("test", "test"), zap.Int("num", 0))
+	if logger == nil {
 		t.Fatal("ctx is nil")
 	}
-	if ctx.Logger == nil {
+	if logger.Logger == nil {
 		t.Fatal("logger is nil")
 	}
-	if ctx.Sentry == nil {
+	if logger.Sentry == nil {
 		t.Fatal("sentry is nil")
 	}
-	ctx.Debug("test", zap.String("test", "test"), zap.Int("num", 1))
-	ctx.Info("test", zap.String("test", "test"), zap.Int("num", 1))
-	ctx.Error("test", zap.String("test", "test"), zap.Int("num", 1))
-	ctx.Error("test", zap.String("test", "test"), zap.Int("num", 1), zap.Error(errors.New("test")))
+	logger.Debug("test", zap.String("test", "test"), zap.Int("num", 1))
+	logger.Info("test", zap.String("test", "test"), zap.Int("num", 1))
+	logger.Error("test", zap.String("test", "test"), zap.Int("num", 1))
+	logger.Error("test", zap.String("test", "test"), zap.Int("num", 1), zap.Error(errors.New("test")))
 }
 
 func Test_NewInvalidSentryURL(t *testing.T) {
@@ -99,28 +145,28 @@ func Test_NewInvalidSentryURL(t *testing.T) {
 }
 
 func Test_NewNop(t *testing.T) {
-	ctx := log.NewNop()
-	if ctx == nil {
+	logger := log.NewNop()
+	if logger == nil {
 		t.Fatal("ctx is nil")
 	}
-	if ctx.Logger == nil {
+	if logger.Logger == nil {
 		t.Fatal("logger is nil")
 	}
-	if ctx.Sentry == nil {
+	if logger.Sentry == nil {
 		t.Fatal("sentry is nil")
 	}
-	ctx = ctx.WithFields(zap.String("test", "test"), zap.Int("num", 0))
-	if ctx == nil {
+	logger = logger.WithFields(zap.String("test", "test"), zap.Int("num", 0))
+	if logger == nil {
 		t.Fatal("ctx is nil")
 	}
-	if ctx.Logger == nil {
+	if logger.Logger == nil {
 		t.Fatal("logger is nil")
 	}
-	if ctx.Sentry == nil {
+	if logger.Sentry == nil {
 		t.Fatal("sentry is nil")
 	}
-	ctx.Debug("test", zap.String("test", "test"), zap.Int("num", 1))
-	ctx.Info("test", zap.String("test", "test"), zap.Int("num", 1))
-	ctx.Error("test", zap.String("test", "test"), zap.Int("num", 1))
-	ctx.Error("test", zap.String("test", "test"), zap.Int("num", 1), zap.Error(errors.New("test")))
+	logger.Debug("test", zap.String("test", "test"), zap.Int("num", 1))
+	logger.Info("test", zap.String("test", "test"), zap.Int("num", 1))
+	logger.Error("test", zap.String("test", "test"), zap.Int("num", 1))
+	logger.Error("test", zap.String("test", "test"), zap.Int("num", 1), zap.Error(errors.New("test")))
 }
