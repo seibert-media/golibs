@@ -14,6 +14,8 @@ The repository contains various shared libs for use in //SEIBERT/MEDIA Golang pr
 This logging setup is using go.uber.org/zap.
 Sentry is being added for production environments.
 
+The signature of `log.New()` allows setting the Sentry DSN as well as a boolean for determining if we are in debug mode (no further level switches available/required yet).
+
 ```go
 l := log.New(
     "sentryDSN",
@@ -27,28 +29,46 @@ If you provide a zap.Error tag, the related stacktrace will also be attached.
 
 To directly access Sentry the internal client is public.
 
-The new implementation found here implements the `context.Context` interface and can therefor be used as a drop in replacement (in most cases).
+#### Adding Fields to the Logger/Sentry
+After initialization, the logger can be injected with fields which then get added to every log entry.
+This is basic zap functionality, while being wrapped by our function to add those fields to Sentry as well.
 
-To do so, just replace your usual `context` import with `context "github.com/seibert-media/golibs/log"`.
+Initializing a new logger and adding an app and a version field could look like this
+```go
+logger := log.New(*sentryDsn, *dbg).WithFields([]zapcore.Field{
+    zap.String("app", "foobar"),
+    zap.String("version", "0.1"),
+})
+defer logger.Sync()
+```
 
-As we don't have full compatibility with the native context helper functions like `context.WithValue(...)` this implementation is
-providing built-in functions to achieve the same.
-Namely:
-- `(c *Context) WithValue(key, val interface{}) *Context`
-- `(c *Context) WithCancel() (*Context, context.CancelFunc)`
-- `(c *Context) WithDeadline(d time.Time) (*Context, context.CancelFunc)`
-- `(c *Context) WithTimeout(d time.Duration) (*Context, context.CancelFunc)`
-all of this can be accessed directly through the object to be modified.
+#### Using with Context
 
-Aside from that, the original implementation has been migrated into this package to allow replacing
-the original context import with this package and provide still working code.
-Namely:
-- `WithValue(c *Context, key, val interface{}) *Context`
-- `WithCancel(c *Context) (*Context, context.CancelFunc)`
-- `WithDeadline(c *Context, d time.Time) (*Context, context.CancelFunc)`
-- `WithTimeout(c *Context, d time.Duration) (*Context, context.CancelFunc)`
+Like the previous versions of this library, this one is primarily meant to be used in combination with `context.Context`.
+This way we are able to pass logging down all our execution trees without ever making the logger a real dependency to call a function or initialize a struct.
 
-There might still be incompatibility issues if dependencies do internal context modification and do not use this import.
+Passing the previously defined logger into the root context is fairly simple and a helper function to do so is already available.
+
+```go
+ctx := log.WithLogger(context.Background(), logger)
+```
+
+This will return a new context containing the passed in logger based on a fresh context (`context.Background()`). Another context can be used instead 
+if available.
+
+To then call the logger inside functions where said context gets passed into, simply use the available helper function for retrieving it.
+Then use the logger as usual.
+```go
+log.From(ctx).Info("preparing")
+log.From(ctx).Error("that did not work", zap.String("foo", "bar"), zap.Error(err))
+// Sentry is available this way as well
+log.From(ctx).Sentry.SetEnvironment("dev")
+```
+
+Additionally there is a helper for adding new fields to the logger directly from context
+```go
+ctx = log.WithFields(ctx, zap.String("newField", "value"))
+```
 
 ## Compatibility
 
