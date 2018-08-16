@@ -65,9 +65,11 @@ func Test_WithFields(t *testing.T) {
 		t.Fatal("logger should not be nop")
 	}
 	log.From(ctx).Debug("test", zap.String("test", "test"))
-
+	log.From(ctx).Sentry.SetRelease("test")
 	ctx = log.WithFields(ctx, zap.String("test-new-field", "test"))
-
+	if log.From(ctx).Sentry.Release() != "test" {
+		t.Fatal("sentry release info should stay consistent when adding fields")
+	}
 	log.From(ctx).Debug("test", zap.String("test", "test"))
 }
 
@@ -169,4 +171,18 @@ func Test_NewNop(t *testing.T) {
 	logger.Info("test", zap.String("test", "test"), zap.Int("num", 1))
 	logger.Error("test", zap.String("test", "test"), zap.Int("num", 1))
 	logger.Error("test", zap.String("test", "test"), zap.Int("num", 1), zap.Error(errors.New("test")))
+}
+
+func Test_SetRelease(t *testing.T) {
+	logger := log.NewNop()
+	logger = logger.WithRelease("test")
+	if logger.Sentry.Release() != "" {
+		t.Fatal("noop logger shouldn't have release info", logger.Sentry.Release())
+	}
+
+	logger = log.New("", false)
+	logger = logger.WithRelease("test")
+	if logger.Sentry.Release() != "test" {
+		t.Fatal("sentry release info not set, is:", logger.Sentry.Release())
+	}
 }

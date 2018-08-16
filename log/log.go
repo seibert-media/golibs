@@ -96,6 +96,7 @@ func (l *Logger) WithFields(fields ...zapcore.Field) *Logger {
 		return l
 	}
 	log := New(l.dsn, l.debug)
+	log.Sentry.SetRelease(l.Sentry.Release())
 	log.Logger = l.Logger.With(fields...)
 	return log
 }
@@ -108,6 +109,20 @@ func (l *Logger) IsNop() bool {
 // To stores the current logger in the passed in context
 func (l *Logger) To(ctx context.Context) context.Context {
 	return WithLogger(ctx, l)
+}
+
+// WithRelease returns a new logger updating the internal sentry client with release info
+// This should be the first change to the logger (before adding fields) as otherwise the change
+// might not be persisted
+func (l *Logger) WithRelease(info string) *Logger {
+	if l.nop {
+		return l
+	}
+	l.Sentry.SetRelease(info)
+	log := New(l.dsn, l.debug)
+	log.Sentry.SetRelease(info)
+	log.Logger = l.Logger.With()
+	return log
 }
 
 // NewSentryEncoder with dsn
@@ -136,7 +151,10 @@ func (s *sentryEncoder) Clone() zapcore.Encoder {
 func (s *sentryEncoder) EncodeEntry(e zapcore.Entry, fields []zapcore.Field) (*buffer.Buffer, error) {
 	buf := buffer.NewPool().Get()
 	if e.Level == zapcore.ErrorLevel {
-		tags := make(map[string]string)
+		tags := s.Sentry.Tags
+		if tags == nil {
+			tags = make(map[string]string)
+		}
 		var err error
 		for _, f := range fields {
 			var tag string

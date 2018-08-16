@@ -70,6 +70,21 @@ Additionally there is a helper for adding new fields to the logger directly from
 ctx = log.WithFields(ctx, zap.String("newField", "value"))
 ```
 
+#### Adding Sentry Release Info
+
+Since the last version, it is supported to add Sentry release information to the logger.
+This allows release tracking inside Sentry and therefor more insight into errors.
+
+**INFO: For now release info has to be the first change made to the logger, right after setting fields. Otherwise the release info might not be persisted. Changing the release in a later stage is not possible.**
+
+Example:
+
+```go
+logger := log.New("sentryDSN", false).WithRelease("some commit hash")
+logger = logger.WithFields(zap.String("app", "example app"))
+defer logger.Sync()
+```
+
 ## Compatibility
 
 This library requires Go 1.9+ and is currently tested against Go 1.9.x and 1.10.x
