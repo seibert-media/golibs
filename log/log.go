@@ -91,7 +91,10 @@ func New(dsn string, debug, local bool) (*Logger, error) {
 		cores = append(cores, stdr.Core())
 	}
 
-	logger := zap.New(zapcore.NewTee(cores...))
+	logger := zap.New(zapcore.NewTee(cores...)).WithOptions(
+		zap.AddCaller(),
+		zap.AddStacktrace(zap.ErrorLevel),
+	)
 
 	return &Logger{
 		Logger: logger,
