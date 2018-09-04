@@ -2,36 +2,66 @@
 
 
 [[projects]]
+  digest = "1:343234fce400633d27598368aae3e0bf3dae5732bf2931d619e2defafa5875ee"
+  name = "github.com/blendle/zapdriver"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "d2d292b2ee7202aedceb5618bb7b49ce38acb306"
+  version = "v1.1.2"
+
+[[projects]]
+  digest = "1:fed1f537c2f1269fe475a8556c393fe466641682d73ef8fd0491cd3aa1e47bad"
   name = "github.com/certifi/gocertifi"
   packages = ["."]
+  pruneopts = "UT"
   revision = "deb3ae2ef2610fde3330947281941c562861188b"
   version = "2018.01.18"
 
 [[projects]]
   branch = "master"
+  digest = "1:64ef2c2f0f508690f06c1b009e1e3103441ce60c2db0323ff94d8d1c560ec10b"
   name = "github.com/getsentry/raven-go"
   packages = ["."]
-  revision = "7452746037452673b6ba6ceb6c8aa4cbf4634f9e"
+  pruneopts = "UT"
+  revision = "084a9de9eb0361fbd5ded14b55c84e5493a5d7f6"
 
 [[projects]]
+  digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
   name = "github.com/pkg/errors"
   packages = ["."]
+  pruneopts = "UT"
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
 
 [[projects]]
-  name = "go.uber.org/atomic"
-  packages = ["."]
-  revision = "4e336646b2ef9fc6e47be8e21594178f98e5ebcf"
-  version = "v1.2.0"
+  branch = "master"
+  digest = "1:8d251c8804ca36b6703b5dcb75f33c62e77afcd3d7ae12bcac76a86e739128b1"
+  name = "github.com/tchap/zapext"
+  packages = [
+    "types",
+    "zapsentry",
+  ]
+  pruneopts = "UT"
+  revision = "e61c0c8823393722ae09ce0faee42fa177088a4b"
 
 [[projects]]
+  digest = "1:3c1a69cdae3501bf75e76d0d86dc6f2b0a7421bc205c0cb7b96b19eed464a34d"
+  name = "go.uber.org/atomic"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "1ea20fb1cbb1cc08cbd0d913a96dead89aa18289"
+  version = "v1.3.2"
+
+[[projects]]
+  digest = "1:60bf2a5e347af463c42ed31a493d817f8a72f102543060ed992754e689805d1a"
   name = "go.uber.org/multierr"
   packages = ["."]
+  pruneopts = "UT"
   revision = "3c4937480c32f4c13a875a1829af76c98ca3d40a"
   version = "v1.1.0"
 
 [[projects]]
+  digest = "1:c52caf7bd44f92e54627a31b85baf06a68333a196b3d8d241480a774733dcf8b"
   name = "go.uber.org/zap"
   packages = [
     ".",
@@ -39,14 +69,23 @@
     "internal/bufferpool",
     "internal/color",
     "internal/exit",
-    "zapcore"
+    "zapcore",
   ]
-  revision = "eeedf312bc6c57391d84767a4cd413f02a917974"
-  version = "v1.8.0"
+  pruneopts = "UT"
+  revision = "ff33455a0e382e8a81d14dd7c922020b6b5e7982"
+  version = "v1.9.1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9dfbf60f35af525422561e04f958518a6f4ee7ed5866f2cd00a7f7546f734f3e"
+  input-imports = [
+    "github.com/blendle/zapdriver",
+    "github.com/getsentry/raven-go",
+    "github.com/pkg/errors",
+    "github.com/tchap/zapext/zapsentry",
+    "go.uber.org/zap",
+    "go.uber.org/zap/buffer",
+    "go.uber.org/zap/zapcore",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1

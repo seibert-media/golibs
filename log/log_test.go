@@ -10,7 +10,7 @@ import (
 )
 
 func Test_NewDebug(t *testing.T) {
-	logger := log.New("", true)
+	logger, _ := log.New("", true)
 	if logger == nil {
 		t.Fatal("ctx is nil")
 	}
@@ -41,7 +41,7 @@ func Test_NewDebug(t *testing.T) {
 }
 
 func Test_From(t *testing.T) {
-	l := log.New("", true)
+	l, _ := log.New("", true)
 	ctx := context.Background()
 
 	ctx = log.WithLogger(ctx, l)
@@ -57,7 +57,7 @@ func Test_From(t *testing.T) {
 }
 
 func Test_WithFields(t *testing.T) {
-	l := log.New("", true)
+	l, _ := log.New("", true)
 	ctx := context.Background()
 
 	ctx = log.WithLogger(ctx, l)
@@ -74,7 +74,7 @@ func Test_WithFields(t *testing.T) {
 }
 
 func Test_WithFieldsOverwrite(t *testing.T) {
-	l := log.New("", true)
+	l, _ := log.New("", true)
 	ctx := context.Background()
 
 	ctx = log.WithLogger(ctx, l)
@@ -89,7 +89,7 @@ func Test_WithFieldsOverwrite(t *testing.T) {
 }
 
 func Test_To(t *testing.T) {
-	l := log.New("", true)
+	l, _ := log.New("", true)
 	ctx := context.Background()
 
 	ctx = l.To(ctx)
@@ -105,7 +105,7 @@ func Test_To(t *testing.T) {
 }
 
 func Test_NewNoDebug(t *testing.T) {
-	logger := log.New("", false)
+	logger, _ := log.New("", false)
 	if logger == nil {
 		t.Fatal("ctx is nil")
 	}
@@ -180,7 +180,7 @@ func Test_SetRelease(t *testing.T) {
 		t.Fatal("noop logger shouldn't have release info", logger.Sentry.Release())
 	}
 
-	logger = log.New("", false)
+	logger, _ = log.New("", false)
 	logger = logger.WithRelease("test")
 	if logger.Sentry.Release() != "test" {
 		t.Fatal("sentry release info not set, is:", logger.Sentry.Release())
