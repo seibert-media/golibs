@@ -69,11 +69,6 @@ func New(dsn string, debug, local bool) (*Logger, error) {
 		return nil, err
 	}
 
-	stdr, err := zapdriver.NewProduction()
-	if err != nil {
-		return nil, err
-	}
-
 	var cores []zapcore.Core
 	if !debug {
 		cores = append(cores, zapsentry.NewCore(zapcore.ErrorLevel, sentry))
@@ -81,6 +76,18 @@ func New(dsn string, debug, local bool) (*Logger, error) {
 	if local {
 		cores = append(cores, buildConsoleLogger(debug))
 	} else {
+		var stdr *zap.Logger
+		if debug {
+			stdr, err = zapdriver.NewProduction()
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			stdr, err = zapdriver.NewDevelopment()
+			if err != nil {
+				return nil, err
+			}
+		}
 		cores = append(cores, stdr.Core())
 	}
 
