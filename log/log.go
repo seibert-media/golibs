@@ -23,6 +23,7 @@ type Logger struct {
 
 	dsn   string
 	debug bool
+	local bool
 	nop   bool
 }
 
@@ -62,10 +63,10 @@ func WithFieldsOverwrite(ctx context.Context, fields ...zapcore.Field) *Logger {
 }
 
 // New Logger sentry instance
-func New(dsn string, debug bool) (*Logger, error) {
+func New(dsn string, debug, local bool) (*Logger, error) {
 	sentry, err := raven.New(dsn)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	stdr, err := zapdriver.NewProduction()
@@ -73,10 +74,17 @@ func New(dsn string, debug bool) (*Logger, error) {
 		return nil, err
 	}
 
-	logger := zap.New(zapcore.NewTee(
-		stdr.Core(),
-		zapsentry.NewCore(zapcore.ErrorLevel, sentry),
-	))
+	var cores []zapcore.Core
+	if !debug {
+		cores = append(cores, zapsentry.NewCore(zapcore.ErrorLevel, sentry))
+	}
+	if local {
+		cores = append(cores, buildConsoleLogger(debug))
+	} else {
+		cores = append(cores, stdr.Core())
+	}
+
+	logger := zap.New(zapcore.NewTee(cores...))
 
 	return &Logger{
 		Logger: logger,
@@ -84,6 +92,7 @@ func New(dsn string, debug bool) (*Logger, error) {
 
 		dsn:   dsn,
 		debug: debug,
+		local: local,
 		nop:   false,
 	}, nil
 }
@@ -107,7 +116,7 @@ func (l *Logger) WithFields(fields ...zapcore.Field) *Logger {
 	if l.nop {
 		return l
 	}
-	log, err := New(l.dsn, l.debug)
+	log, err := New(l.dsn, l.debug, l.local)
 	if err != nil {
 		l.Error("creating new logger", zap.Error(err))
 		return l
@@ -135,7 +144,7 @@ func (l *Logger) WithRelease(info string) *Logger {
 		return l
 	}
 	l.Sentry.SetRelease(info)
-	log, err := New(l.dsn, l.debug)
+	log, err := New(l.dsn, l.debug, l.local)
 	if err != nil {
 		l.Error("creating new logger", zap.Error(err))
 		return l
