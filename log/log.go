@@ -78,12 +78,12 @@ func New(dsn string, debug, local bool) (*Logger, error) {
 	} else {
 		var stdr *zap.Logger
 		if debug {
-			stdr, err = zapdriver.NewProduction()
+			stdr, err = zapdriver.NewDevelopment()
 			if err != nil {
 				return nil, err
 			}
 		} else {
-			stdr, err = zapdriver.NewDevelopment()
+			stdr, err = zapdriver.NewProduction()
 			if err != nil {
 				return nil, err
 			}
