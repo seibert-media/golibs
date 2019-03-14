@@ -3,13 +3,14 @@ language: go
 go:
   - 1.9.x
   - 1.10.x
+  - 1.11.x
 
 go_import_path: github.com/seibert-media/golibs
 
 env:
   global:
-  - REPO: $TRAVIS_REPO_SLUG
-  - VERSION: $TRAVIS_TAG
+    - REPO: $TRAVIS_REPO_SLUG
+    - VERSION: $TRAVIS_TAG
 
 before_install:
   - make deps
@@ -20,4 +21,4 @@ before_script:
   - godacov -t $CODACY_TOKEN -r ./coverage.out -c $TRAVIS_COMMIT
 
 script:
-- make test
+  - make test
