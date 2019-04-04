@@ -66,14 +66,19 @@ func WithFieldsOverwrite(ctx context.Context, fields ...zapcore.Field) *Logger {
 // If no sentry dsn is provided, the sentry encoding is disabled
 // If local is true, logs will be provided in a human readable format, false will print stackdriver conformant logs as json
 func New(dsn string, local bool) (*Logger, error) {
+	level := zap.NewAtomicLevelAt(zap.InfoLevel)
+	return NewWithLevel(dsn, local, level)
+}
+
+// NewWithLevel builds a Logger instance with an optional sentry key and the predefined level.
+// If no sentry dsn is provided, the sentry encoding is disabled
+// If local is true, logs will be provided in a human readable format, false will print stackdriver conformant logs as json
+func NewWithLevel(dsn string, local bool, level zap.AtomicLevel) (*Logger, error) {
 	var (
 		cores  []zapcore.Core
 		sentry *raven.Client
-		level  zap.AtomicLevel
 		err    error
 	)
-
-	level = zap.NewAtomicLevelAt(zap.InfoLevel)
 
 	if len(dsn) > 0 {
 		sentry, err = raven.New(dsn)
@@ -131,12 +136,11 @@ func (l *Logger) WithFields(fields ...zapcore.Field) *Logger {
 	if l.nop {
 		return l
 	}
-	log, err := New(l.dsn, l.local)
+	log, err := NewWithLevel(l.dsn, l.local, l.Level)
 	if err != nil {
 		l.Error("creating new logger", zap.Error(err))
 		return l
 	}
-	log.Level.SetLevel(l.Level.Level())
 
 	if l.Sentry != nil {
 		log.Sentry.SetRelease(l.Sentry.Release())
