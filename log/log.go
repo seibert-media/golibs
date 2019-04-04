@@ -136,6 +136,8 @@ func (l *Logger) WithFields(fields ...zapcore.Field) *Logger {
 		l.Error("creating new logger", zap.Error(err))
 		return l
 	}
+	log.Level.SetLevel(l.Level.Level())
+
 	if l.Sentry != nil {
 		log.Sentry.SetRelease(l.Sentry.Release())
 	}

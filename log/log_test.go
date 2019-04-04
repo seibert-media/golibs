@@ -289,7 +289,9 @@ func Test_CtxSetLevel(t *testing.T) {
 	capture.capture(out)
 	logger, _ := log.New("", true)
 	ctx := logger.To(context.Background())
+	logger.WithFields(zap.String("test", "test"))
 	log.SetLevel(ctx, zap.DebugLevel)
+	logger.WithFields(zap.String("test", "test"))
 	logger.Debug("test")
 	capture.finish()
 	msg := <-out
