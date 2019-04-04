@@ -175,9 +175,5 @@ func buildConsoleLogger(level zap.AtomicLevel) zapcore.Core {
 	config := zap.NewDevelopmentEncoderConfig()
 	encoder := zapcore.NewConsoleEncoder(config)
 
-	cores := []zapcore.Core{
-		zapcore.NewCore(encoder, stdout, level),
-	}
-
-	return zapcore.NewTee(cores...)
+	return zapcore.NewCore(encoder, stdout, level)
 }
